@@ -50,6 +50,7 @@ const Assignment2_base = defs.Assignment2_base =
 
         // TODO: you should create a Spline class instance
         this.human = new Articulated_Human();
+
         this.spline = new Spline();
         this.spline.add_point(3, 7, -0.9, -1, 1, 0);
         this.spline.add_point(2, 8, -0.9, 0, 15, 0);
@@ -67,7 +68,6 @@ const Assignment2_base = defs.Assignment2_base =
         this.rest_pos = this.human.get_end_effector_position();
         const start_pos = vec3(3, 7, -0.9);
         this.rest_to_start = start_pos.minus(this.rest_pos);
-        //const rest_pos = vec3(rest[0], rest[1], rest[2]);
 
         this.isBegin = true;
         this.isLoop = false;
@@ -179,20 +179,11 @@ export class Assignment2 extends Assignment2_base
       const t_2 = ((t - 1) / 4.0) % 1;
       const p = this.spline.get_position(this.spline.get_u(this.spline.constant_vel_fn(t_2)));
       const end_pos = [p[0], p[1], p[2]];
-      this.human.ik_solver(end_pos, 0.4);
+      this.human.ik_solver(end_pos, 0.3);
       this.human.draw( caller, this.uniforms, this.materials.plastic);
     }
 
     this.curve.draw(caller, this.uniforms);
-    //const x = this.spline.get_u(6.7);
-    //console.log(this.spline.get_length(1));
-
-    //console.log(this.spline.constant_vel_fn(t_1));
-    //console.log(this.spline.get_u(this.spline.constant_vel_fn(t_1)));
-    //let s = this.spline.get_position(t_1);
-    // let s = this.spline.get_position(this.spline.get_u(this.spline.constant_vel_fn(t_1)));
-    // let ball_transform = Mat4.translation(s[0], s[1], s[2]).times(Mat4.scale(0.2, 0.2, 0.2));
-    // this.shapes.ball.draw( caller, this.uniforms, ball_transform, { ...this.materials.plastic, color: yellow } );
   }
 
   render_controls()

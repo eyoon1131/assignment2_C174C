@@ -92,15 +92,6 @@ export class Spline {
 
     get_u(s) {
         let u_a = 0, u_b = 1.0, u_c;
-        // let u_c = (u_a + u_b) / 2.0;
-        // if (u_b - u_a === (1 / (this.length_table.length - 1)))
-        //     return (u_a + u_b) / 2.0;
-        // if (this.f(u_c, s) === 0)
-        //     return u_c;
-        // else if (this.f(u_a, s) * this.f(u_c, s) < 0)
-        //     return this.get_u(s, u_a, u_c);
-        // else
-        //     return this.get_u(s, u_c, u_b);
 
         do {
             if (u_b - u_a <= (1 / (this.length_table.length - 1)))
@@ -115,6 +106,7 @@ export class Spline {
             //console.log(this.f(u_c, s));
         }
         while (Math.abs(this.f(u_c, s)) > 0.01)
+
         return u_c;
     }
 

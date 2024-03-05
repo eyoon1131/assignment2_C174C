@@ -147,35 +147,25 @@ class Articulated_Human {
         this.r_wrist.end_effector = this.end_effector;
 
         this.dof = 10;
-        this.Jacobian = null;
         this.theta = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.apply_theta();
-
-        this.step = 0.01;
     }
 
     ik_solver(final_pos, epsilon) {
         let E = [0, 0, 0];
         const p = this.get_end_effector_position();
         let p_arr = [p[0], p[1], p[2]];
+        const step = 0.1;
 
         do {
-            //const p = this.get_end_effector_position();
-            //const p_arr = [p[0], p[1], p[2]];
             E = math.subtract(final_pos, p_arr);
-            const delta_p = math.multiply(this.step, E);
+            const delta_p = math.multiply(step, E);
             const J = this.calculate_Jacobian();
-            const new_p = this.get_end_effector_position();
-            const new_p_arr = [new_p[0], new_p[1], new_p[2]];
-            //const delta_p = math.subtract(new_p_arr, p_arr);
             const delta_theta = this.calculate_delta_theta(J, delta_p);
-
             this.theta = this.theta.map((v, i) => v + delta_theta[i][0]);
-            this.check_constraints();
+            this.check_constraints(); // make sure joints not rotating past their constraints
             this.apply_theta();
-
             p_arr = math.add(p_arr, delta_p);
-
         }
         while (math.norm(E, 3) > epsilon)
     }
@@ -232,9 +222,6 @@ class Articulated_Human {
         const step = 0.01;
 
         for (let j = 0; j < this.dof; j++) {
-            // J[0][j] = 0;
-            // J[1][j] = 0;
-            // J[2][j] = 0;
             this.theta[j] += step;
             this.apply_theta();
             const new_p = this.get_end_effector_position();
@@ -243,7 +230,6 @@ class Articulated_Human {
             J[2][j] = (new_p[2] - p[2]) / step;
             this.theta[j] -= step;
         }
-
 
         return J; // 3x10
     }
