@@ -1,5 +1,7 @@
 import {tiny, defs} from './examples/common.js';
 import {Articulated_Human} from "./human.js";
+import {Spline} from "./spline.js";
+import {Curve_Shape} from "./shapes.js";
 
 // Pull these names into this module's scope for convenience:
 const { vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component } = tiny;
@@ -48,6 +50,27 @@ const Assignment2_base = defs.Assignment2_base =
 
         // TODO: you should create a Spline class instance
         this.human = new Articulated_Human();
+        this.spline = new Spline();
+        this.spline.add_point(3, 7, -0.9, -1, 1, 0);
+        this.spline.add_point(2, 8, -0.9, 0, 15, 0);
+        this.spline.add_point(3, 9, -0.9, 15, 0, 0);
+        this.spline.add_point(4, 8, -0.9, 0, -15, 0);
+        this.spline.add_point(3, 7, -0.9, -1, -1, 0);
+        this.spline.add_point(2, 6, -0.9, 0, -15, 0);
+        this.spline.add_point(3, 5, -0.9, 15, 0, 0);
+        this.spline.add_point(4, 6, -0.9, 0, 15, 0);
+        this.spline.add_point(3, 7, -0.9, -1, 1, 0);
+
+        const curve_fn = (t) => this.spline.get_position(t);
+        this.curve = new Curve_Shape(curve_fn, 1000);
+
+        this.rest_pos = this.human.get_end_effector_position();
+        const start_pos = vec3(3, 7, -0.9);
+        this.rest_to_start = start_pos.minus(this.rest_pos);
+        //const rest_pos = vec3(rest[0], rest[1], rest[2]);
+
+        this.isBegin = true;
+        this.isLoop = false;
       }
 
       render_animation( caller )
@@ -138,12 +161,38 @@ export class Assignment2 extends Assignment2_base
     // TODO: you can change the wall and board as needed.
     let wall_transform = Mat4.translation(0, 5, -1.2).times(Mat4.scale(6, 5, 0.1));
     this.shapes.box.draw( caller, this.uniforms, wall_transform, { ...this.materials.plastic, color: wall_color } );
-    let board_transform = Mat4.translation(3, 6, -1).times(Mat4.scale(2.5, 2.5, 0.1));
+    let board_transform = Mat4.translation(3, 7, -1).times(Mat4.scale(2.5, 2.5, 0.1));
     this.shapes.box.draw( caller, this.uniforms, board_transform, { ...this.materials.plastic, color: blackboard_color } );
 
-    const p = [5, 7, 0];
-    this.human.ik_solver(p, 0.1);
-    this.human.draw( caller, this.uniforms, this.materials.plastic);
+    const t_1 = t % 1;
+    if (t > 1) {
+      this.isBegin = false;
+      this.isLoop = true;
+    }
+    if (this.isBegin) {
+      const p = this.rest_pos.plus(this.rest_to_start.times(t_1));
+      const end_pos = [p[0], p[1], p[2]];
+      this.human.ik_solver(end_pos, 0.4);
+      this.human.draw( caller, this.uniforms, this.materials.plastic);
+    }
+    if (this.isLoop) {
+      const t_2 = ((t - 1) / 4.0) % 1;
+      const p = this.spline.get_position(this.spline.get_u(this.spline.constant_vel_fn(t_2)));
+      const end_pos = [p[0], p[1], p[2]];
+      this.human.ik_solver(end_pos, 0.4);
+      this.human.draw( caller, this.uniforms, this.materials.plastic);
+    }
+
+    this.curve.draw(caller, this.uniforms);
+    //const x = this.spline.get_u(6.7);
+    //console.log(this.spline.get_length(1));
+
+    //console.log(this.spline.constant_vel_fn(t_1));
+    //console.log(this.spline.get_u(this.spline.constant_vel_fn(t_1)));
+    //let s = this.spline.get_position(t_1);
+    // let s = this.spline.get_position(this.spline.get_u(this.spline.constant_vel_fn(t_1)));
+    // let ball_transform = Mat4.translation(s[0], s[1], s[2]).times(Mat4.scale(0.2, 0.2, 0.2));
+    // this.shapes.ball.draw( caller, this.uniforms, ball_transform, { ...this.materials.plastic, color: yellow } );
   }
 
   render_controls()

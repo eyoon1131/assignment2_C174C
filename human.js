@@ -18,7 +18,7 @@ class Articulated_Human {
         const torso_transform = Mat4.scale(0.9, 1.7, 0.5);
         this.torso_node = new Node("torso", sphere_shape, torso_transform);
         // root->torso
-        const root_location = Mat4.translation(-2, 6, 0);
+        const root_location = Mat4.translation(0, 6, 0);
         this.root = new Arc("root", null, this.torso_node, root_location);
         this.root.set_dof(true, true, true, false, false, false);
 
@@ -89,7 +89,7 @@ class Articulated_Human {
         this.ll_arm_node.children_arcs.push(this.l_wrist);
 
         // right thigh node
-        let r_thigh_transform = Mat4.scale(.3, 1.1, .2);
+        let r_thigh_transform = Mat4.scale(.3, 1.1, .4);
         r_thigh_transform.pre_multiply(Mat4.translation(0, -1.1, 0));
         this.r_thigh_node = new Node("r_thigh", sphere_shape, r_thigh_transform);
         // torso->r_hip->r_thigh
@@ -98,7 +98,7 @@ class Articulated_Human {
         this.torso_node.children_arcs.push(this.r_hip)
 
         // right shin node
-        let r_shin_transform = Mat4.scale(0.3, 1, .2);
+        let r_shin_transform = Mat4.scale(0.3, 1, .3);
         r_shin_transform.pre_multiply(Mat4.translation(0, -1, 0));
         this.r_shin_node = new Node("r_shin", sphere_shape, r_shin_transform);
         // r_thigh->r_knee->r_shin
@@ -107,7 +107,7 @@ class Articulated_Human {
         this.r_thigh_node.children_arcs.push(this.r_knee)
 
         // right foot node
-        let r_foot_transform = Mat4.scale(.3, .15, .2);
+        let r_foot_transform = Mat4.scale(.3, .15, .3);
         r_foot_transform.pre_multiply(Mat4.translation(0, -0.15, 0));
         this.r_foot_node = new Node("r_foot", sphere_shape, r_foot_transform);
         // r_shin->r_ankle->r_foot
@@ -116,7 +116,7 @@ class Articulated_Human {
         this.r_shin_node.children_arcs.push(this.r_ankle)
 
         // left thigh node
-        let l_thigh_transform = Mat4.scale(-.3, 1.1, .2);
+        let l_thigh_transform = Mat4.scale(-.3, 1.1, .4);
         l_thigh_transform.pre_multiply(Mat4.translation(0, -1.1, 0));
         this.l_thigh_node = new Node("l_thigh", sphere_shape, l_thigh_transform);
         // torso->l_hip->l_thigh
@@ -125,7 +125,7 @@ class Articulated_Human {
         this.torso_node.children_arcs.push(this.l_hip)
 
         // left shin node
-        let l_shin_transform = Mat4.scale(0.3, 1, .2);
+        let l_shin_transform = Mat4.scale(0.3, 1, .3);
         l_shin_transform.pre_multiply(Mat4.translation(0, -1, 0));
         this.l_shin_node = new Node("l_shin", sphere_shape, l_shin_transform);
         // l_thigh->l_knee->l_shin
@@ -134,7 +134,7 @@ class Articulated_Human {
         this.l_thigh_node.children_arcs.push(this.l_knee)
 
         // left foot node
-        let l_foot_transform = Mat4.scale(.3, .15, .2);
+        let l_foot_transform = Mat4.scale(.3, .15, .3);
         l_foot_transform.pre_multiply(Mat4.translation(0, -0.15, 0));
         this.l_foot_node = new Node("l_foot", sphere_shape, l_foot_transform);
         // l_shin->l_ankle->l_foot
@@ -170,14 +170,49 @@ class Articulated_Human {
             //const delta_p = math.subtract(new_p_arr, p_arr);
             const delta_theta = this.calculate_delta_theta(J, delta_p);
 
-            for (let i = 0; i < this.dof; i++) {
-                this.theta[i] += delta_theta[i][0];
-            }
+            this.theta = this.theta.map((v, i) => v + delta_theta[i][0]);
+            this.check_constraints();
+            this.apply_theta();
 
             p_arr = math.add(p_arr, delta_p);
 
         }
         while (math.norm(E, 3) > epsilon)
+    }
+
+    check_constraints() { // constraints on how much joints can rotate
+        if (this.theta[0] < (-1))
+            this.theta[0] = -1;
+        else if (this.theta[0] > (1))
+            this.theta[0] = 1;
+        if (this.theta[1] !== 0) // so person doesn't levitate or go into ground
+            this.theta[1] = 0;
+        if (this.theta[2] < (-0.8))
+            this.theta[2] = -0.8;
+        if (this.theta[4] < (-Math.PI / 2))
+            this.theta[4] = -Math.PI / 2;
+        else if (this.theta[4] > (Math.PI / 2))
+            this.theta[4] = Math.PI / 2;
+        if (this.theta[5] < (-Math.PI / 2))
+            this.theta[5] = -Math.PI / 2;
+        else if (this.theta[5] > (Math.PI / 2))
+            this.theta[5] = Math.PI / 2;
+        if (this.theta[6] < (-Math.PI / 2))
+            this.theta[6] = -Math.PI / 2;
+        else if (this.theta[6] > (Math.PI / 2))
+            this.theta[6] = Math.PI / 2;
+        if (this.theta[7] > (Math.PI))
+            this.theta[7] = Math.PI;
+        else if (this.theta[7] < 0)
+            this.theta[7] = 0;
+        if (this.theta[8] < (-Math.PI / 2))
+            this.theta[8] = -Math.PI / 2;
+        else if (this.theta[8] > (Math.PI / 2))
+            this.theta[8] = Math.PI / 2;
+        if (this.theta[9] < (-Math.PI / 4))
+            this.theta[9] = -Math.PI / 4;
+        else if (this.theta[9] > (Math.PI / 4))
+            this.theta[9] = Math.PI / 4;
     }
 
     apply_theta() {
@@ -197,9 +232,9 @@ class Articulated_Human {
         const step = 0.01;
 
         for (let j = 0; j < this.dof; j++) {
-            J[0][j] = 0;
-            J[1][j] = 0;
-            J[2][j] = 0;
+            // J[0][j] = 0;
+            // J[1][j] = 0;
+            // J[2][j] = 0;
             this.theta[j] += step;
             this.apply_theta();
             const new_p = this.get_end_effector_position();
@@ -218,11 +253,11 @@ class Articulated_Human {
         for (let i = 0; i < this.dof; i++) {
             A[i][i] += 1;
         }
-        console.log(A);
+        //console.log(A);
         const b = math.multiply(math.transpose(J), dx);
-        console.log(b);
+        //console.log(b);
         const x = math.lusolve(A, b)
-        console.log(x);
+        //console.log(x);
 
         return x;
     }
