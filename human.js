@@ -9,7 +9,7 @@ const shapes = {
 };
 
 export
-const Articulated_Human = 
+const Articulated_Human =  // from discussion slides
 class Articulated_Human {
     constructor() {
         const sphere_shape = shapes.sphere;
@@ -155,11 +155,11 @@ class Articulated_Human {
         let E = [0, 0, 0];
         const p = this.get_end_effector_position();
         let p_arr = [p[0], p[1], p[2]];
-        const step = 0.1;
+        const k = 0.1;
 
-        do {
+        do { // algorithm given in lecture slides
             E = math.subtract(final_pos, p_arr);
-            const delta_p = math.multiply(step, E);
+            const delta_p = math.multiply(k, E);
             const J = this.calculate_Jacobian();
             const delta_theta = this.calculate_delta_theta(J, delta_p);
             this.theta = this.theta.map((v, i) => v + delta_theta[i][0]);
@@ -222,6 +222,7 @@ class Articulated_Human {
         const step = 0.01;
 
         for (let j = 0; j < this.dof; j++) {
+            // apply small step to approximate instantaneous velociites
             this.theta[j] += step;
             this.apply_theta();
             const new_p = this.get_end_effector_position();
@@ -231,13 +232,13 @@ class Articulated_Human {
             this.theta[j] -= step;
         }
 
-        return J; // 3x10
+        return J; // 3x10 matrix
     }
 
-    calculate_delta_theta(J, dx) {
+    calculate_delta_theta(J, dx) { // from discussion slides
         const A = math.multiply(math.transpose(J), J);
         for (let i = 0; i < this.dof; i++) {
-            A[i][i] += 1;
+            A[i][i] += 1; // add identity matrix to prevent singularity
         }
         //console.log(A);
         const b = math.multiply(math.transpose(J), dx);
@@ -248,7 +249,7 @@ class Articulated_Human {
         return x;
     }
 
-    get_end_effector_position() {
+    get_end_effector_position() { // from discussion slides
         // in this example, we only have one end effector.
         this.matrix_stack = [];
         this._rec_update(this.root, Mat4.identity());
@@ -256,7 +257,7 @@ class Articulated_Human {
         return vec3(v[0], v[1], v[2]);
     }
 
-    _rec_update(arc, matrix) {
+    _rec_update(arc, matrix) { // from discussion slides
         if (arc !== null) {
             const L = arc.location_matrix;
             const A = arc.articulation_matrix;
@@ -280,12 +281,12 @@ class Articulated_Human {
         }
     }
 
-    draw(webgl_manager, uniforms, material) {
+    draw(webgl_manager, uniforms, material) { // from discussion slides
         this.matrix_stack = [];
         this._rec_draw(this.root, Mat4.identity(), webgl_manager, uniforms, material);
     }
 
-    _rec_draw(arc, matrix, webgl_manager, uniforms, material) {
+    _rec_draw(arc, matrix, webgl_manager, uniforms, material) { // from discussion slides
         if (arc !== null) {
             const L = arc.location_matrix;
             const A = arc.articulation_matrix;
@@ -306,7 +307,7 @@ class Articulated_Human {
         }
     }
 
-    debug(arc=null, id=null) {
+    debug(arc=null, id=null) { // from discussion slides
         console.log(this.get_end_effector_position());
         // this.theta = this.theta.map(x => x + 0.01);
         // this.apply_theta();
@@ -343,7 +344,7 @@ class Articulated_Human {
     }
 }
 
-class Node {
+class Node { // from discussion slides
     constructor(name, shape, transform) {
         this.name = name;
         this.shape = shape;
@@ -352,7 +353,7 @@ class Node {
     }
 }
 
-class Arc {
+class Arc { // from discussion slides
     constructor(name, parent, child, location) {
         this.name = name;
         this.parent_node = parent;
@@ -408,7 +409,7 @@ class Arc {
     }
 }
 
-class End_Effector {
+class End_Effector { // from discussion slides
     constructor(name, parent, local_position) {
         this.name = name;
         this.parent = parent;

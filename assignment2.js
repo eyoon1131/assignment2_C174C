@@ -164,19 +164,20 @@ export class Assignment2 extends Assignment2_base
     let board_transform = Mat4.translation(3, 7, -1).times(Mat4.scale(2.5, 2.5, 0.1));
     this.shapes.box.draw( caller, this.uniforms, board_transform, { ...this.materials.plastic, color: blackboard_color } );
 
-    const t_1 = t % 1;
-    if (t > 1) {
+    if (t > 2) {
       this.isBegin = false;
       this.isLoop = true;
     }
     if (this.isBegin) {
+      const t_1 = (t / 2.0) % 1;
       const p = this.rest_pos.plus(this.rest_to_start.times(t_1));
       const end_pos = [p[0], p[1], p[2]];
       this.human.ik_solver(end_pos, 0.4);
       this.human.draw( caller, this.uniforms, this.materials.plastic);
     }
     if (this.isLoop) {
-      const t_2 = ((t - 1) / 4.0) % 1;
+      const t_2 = ((t - 2) / 4.0) % 1;
+      // traces the spline at a constant velocity
       const p = this.spline.get_position(this.spline.get_u(this.spline.constant_vel_fn(t_2)));
       const end_pos = [p[0], p[1], p[2]];
       this.human.ik_solver(end_pos, 0.3);
